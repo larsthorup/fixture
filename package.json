@@ -1,0 +1,25 @@
+{
+  "name": "@larsthorup/fixture",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "vitest --run . && tsc"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/larsthorup/fixture.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/larsthorup/fixture/issues"
+  },
+  "homepage": "https://github.com/larsthorup/fixture#readme",
+  "devDependencies": {
+    "typescript": "^4.7.4",
+    "vitest": "^0.15.2"
+  }
+}

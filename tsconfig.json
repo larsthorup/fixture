@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "allowJs": true,
+    "checkJs": true,
+    "esModuleInterop": true,
+    "noEmit": true,
+    "strict": true,
+    "types": ["node"]
+  },
+  "exclude": ["node_modules"],
+  "include": ["**/*.js", "**/*.ts"]
+}
