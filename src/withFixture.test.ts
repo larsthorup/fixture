@@ -1,31 +1,30 @@
-import * as test from "vitest";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 type AfterAll<T extends {}> = (fn: (test: T) => void) => void;
 type BeforeAll<T extends {}> = (fn: (test: T) => void) => void;
 type Describe<T extends {}> = (name: string, fn: (test: T) => void) => void;
 type It<T extends {}> = (name: string, fn: (test: T) => void) => void;
+type Test<T extends {}> = {
+  afterAll: AfterAll<T>;
+  beforeAll: BeforeAll<T>;
+  describe: Describe<T>;
+  it: It<T>;
+};
+type Block<T extends {}> = (test: Test<T>) => void;
 
-const { expect } = test;
+const test = {
+  afterAll,
+  beforeAll,
+  describe,
+  it,
+};
 
 test.describe("withFixture, typed", () => {
   let order: string[] = [];
 
   test.describe("block", () => {
     type Db = { some: string };
-    const withDb = (
-      test: {
-        afterAll: AfterAll<{}>;
-        beforeAll: BeforeAll<{}>;
-        describe: Describe<{}>;
-        it: It<{}>;
-      },
-      block: (test: {
-        afterAll: AfterAll<{ db: Db | undefined }>;
-        beforeAll: BeforeAll<{ db: Db | undefined }>;
-        describe: Describe<{ db: Db | undefined }>;
-        it: It<{ db: Db | undefined }>;
-      }) => void
-    ) => {
+    const withDb = (test: Test<{}>, block: Block<{ db: Db | undefined }>) => {
       let db: Db | undefined;
       const get = () => ({ db });
       test.beforeAll(() => {
