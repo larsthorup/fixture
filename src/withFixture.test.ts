@@ -1,18 +1,26 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 type TestWith<T extends {}> = {
-  afterAll: (fn: (test: T) => void) => void;
-  beforeAll: (fn: (test: T) => void) => void;
-  describe: (name: string, fn: (test: T) => void) => void;
-  it: (name: string, fn: (test: T) => void) => void;
+  afterAll: (fn: (test: TestWith<T>) => void) => void;
+  beforeAll: (fn: (test: TestWith<T>) => void) => void;
+  describe: (name: string, fn: (test: TestWith<T>) => void) => void;
+  it: (name: string, fn: (test: TestWith<T>) => void) => void;
 } & T;
 type BlockWith<T extends {}> = (test: TestWith<T>) => void;
 
-const test = {
-  afterAll,
-  beforeAll,
-  describe,
-  it,
+const test: TestWith<{}> = {
+  afterAll: (fn: BlockWith<{}>) => {
+    afterAll(() => fn(test));
+  },
+  beforeAll: (fn: BlockWith<{}>) => {
+    beforeAll(() => fn(test));
+  },
+  describe: (name: string, fn: BlockWith<{}>) => {
+    describe(name, () => fn(test));
+  },
+  it: (name: string, fn: BlockWith<{}>) => {
+    it(name, () => fn(test));
+  },
 };
 
 test.describe("withFixture, typed", () => {
@@ -35,22 +43,22 @@ test.describe("withFixture, typed", () => {
         ...test,
         ...get(),
         afterAll: (fn: BlockWith<{ db: Db }>) => {
-          test.afterAll(() => {
+          test.afterAll((test: TestWith<{}>) => {
             fn({ ...test, ...get() } as TestWith<{ db: Db }>);
           });
         },
         beforeAll: (fn: BlockWith<{ db: Db }>) => {
-          test.beforeAll(() => {
+          test.beforeAll((test: TestWith<{}>) => {
             fn({ ...test, ...get() } as TestWith<{ db: Db }>);
           });
         },
         describe: (name: string, fn: BlockWith<{ db: Db }>) => {
-          test.describe(name, (test: {}) => {
+          test.describe(name, (test: TestWith<{}>) => {
             fn({ ...test, ...get() } as TestWith<{ db: Db }>);
           });
         },
         it: (name: string, fn: BlockWith<{ db: Db }>) => {
-          test.it(name, (test: {}) => {
+          test.it(name, (test: TestWith<{}>) => {
             fn({ ...test, ...get() } as TestWith<{ db: Db }>);
           });
         },
