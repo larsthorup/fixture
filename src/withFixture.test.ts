@@ -9,7 +9,7 @@ type TestWith<T extends {}> = {
   beforeAll: BeforeAll<T>;
   describe: Describe<T>;
   it: It<T>;
-};
+} & T;
 type BlockWith<T extends {}> = (test: TestWith<T>) => void;
 
 const test = {
@@ -37,6 +37,7 @@ test.describe("withFixture, typed", () => {
       });
       block({
         ...test,
+        ...get(),
         afterAll: (fn: (test: { db: Db }) => void) => {
           test.afterAll(() => {
             fn({ ...test, ...get() });
