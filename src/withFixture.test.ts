@@ -4,13 +4,13 @@ type AfterAll<T extends {}> = (fn: (test: T) => void) => void;
 type BeforeAll<T extends {}> = (fn: (test: T) => void) => void;
 type Describe<T extends {}> = (name: string, fn: (test: T) => void) => void;
 type It<T extends {}> = (name: string, fn: (test: T) => void) => void;
-type Test<T extends {}> = {
+type TestWith<T extends {}> = {
   afterAll: AfterAll<T>;
   beforeAll: BeforeAll<T>;
   describe: Describe<T>;
   it: It<T>;
 };
-type Block<T extends {}> = (test: Test<T>) => void;
+type BlockWith<T extends {}> = (test: TestWith<T>) => void;
 
 const test = {
   afterAll,
@@ -24,7 +24,7 @@ test.describe("withFixture, typed", () => {
 
   test.describe("block", () => {
     type Db = { some: string } | undefined;
-    const withDb = (test: Test<{}>, block: Block<{ db: Db }>) => {
+    const withDb = (test: TestWith<{}>, block: BlockWith<{ db: Db }>) => {
       let db: Db;
       const get = () => ({ db });
       test.beforeAll(() => {
