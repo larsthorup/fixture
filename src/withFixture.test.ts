@@ -27,7 +27,7 @@ test.describe("withFixture, typed", () => {
       test: TestWith<{ db: Db }>,
       block: BlockWith<{ db: Db; server: Server }>
     ) => {
-      test.describe("withServer", ({ db }) => {
+      test.describe("withServer", () => {
         let server: Server;
         test.beforeAll(({ db }) => {
           server = { db };
