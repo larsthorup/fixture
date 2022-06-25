@@ -23,11 +23,43 @@ const test: TestWith<{}> = {
   },
 };
 
+type Db = { some: string } | undefined;
+
+const use = (
+  test: TestWith<{}>,
+  get: () => { db: Db },
+  block: BlockWith<{ db: Db }>
+) => {
+  block({
+    ...test,
+    ...get(),
+    afterAll: (fn: BlockWith<{ db: Db }>) => {
+      test.afterAll((test: TestWith<{}>) => {
+        fn({ ...test, ...get() } as TestWith<{ db: Db }>);
+      });
+    },
+    beforeAll: (fn: BlockWith<{ db: Db }>) => {
+      test.beforeAll((test: TestWith<{}>) => {
+        fn({ ...test, ...get() } as TestWith<{ db: Db }>);
+      });
+    },
+    describe: (name: string, fn: BlockWith<{ db: Db }>) => {
+      test.describe(name, (test: TestWith<{}>) => {
+        fn({ ...test, ...get() } as TestWith<{ db: Db }>);
+      });
+    },
+    it: (name: string, fn: BlockWith<{ db: Db }>) => {
+      test.it(name, (test: TestWith<{}>) => {
+        fn({ ...test, ...get() } as TestWith<{ db: Db }>);
+      });
+    },
+  });
+};
+
 test.describe("withFixture, typed", () => {
   let order: string[] = [];
 
   test.describe("block", () => {
-    type Db = { some: string } | undefined;
     const withDb = (test: TestWith<{}>, block: BlockWith<{ db: Db }>) => {
       let db: Db;
       const get = () => ({ db });
@@ -39,30 +71,7 @@ test.describe("withFixture, typed", () => {
         db = undefined;
         order.push("teardown db");
       });
-      block({
-        ...test,
-        ...get(),
-        afterAll: (fn: BlockWith<{ db: Db }>) => {
-          test.afterAll((test: TestWith<{}>) => {
-            fn({ ...test, ...get() } as TestWith<{ db: Db }>);
-          });
-        },
-        beforeAll: (fn: BlockWith<{ db: Db }>) => {
-          test.beforeAll((test: TestWith<{}>) => {
-            fn({ ...test, ...get() } as TestWith<{ db: Db }>);
-          });
-        },
-        describe: (name: string, fn: BlockWith<{ db: Db }>) => {
-          test.describe(name, (test: TestWith<{}>) => {
-            fn({ ...test, ...get() } as TestWith<{ db: Db }>);
-          });
-        },
-        it: (name: string, fn: BlockWith<{ db: Db }>) => {
-          test.it(name, (test: TestWith<{}>) => {
-            fn({ ...test, ...get() } as TestWith<{ db: Db }>);
-          });
-        },
-      });
+      use(test, get, block);
     };
     withDb(test, (test) => {
       test.describe("withServer", () => {
