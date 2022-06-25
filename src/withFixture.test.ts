@@ -23,8 +23,8 @@ const test: TestWith<{}> = {
   },
 };
 
-const use = <U extends {}>(
-  test: TestWith<{}>,
+const use = <T extends {}, U extends {}>(
+  test: TestWith<T>,
   get: () => U,
   block: BlockWith<U>
 ) => {
@@ -32,23 +32,23 @@ const use = <U extends {}>(
     ...test,
     ...get(),
     afterAll: (fn: BlockWith<U>) => {
-      test.afterAll((test: TestWith<{}>) => {
-        fn({ ...test, ...get() } as TestWith<U>);
+      test.afterAll((test: TestWith<T>) => {
+        fn({ ...test, ...get() } as TestWith<T & U>);
       });
     },
     beforeAll: (fn: BlockWith<U>) => {
-      test.beforeAll((test: TestWith<{}>) => {
-        fn({ ...test, ...get() } as TestWith<U>);
+      test.beforeAll((test: TestWith<T>) => {
+        fn({ ...test, ...get() } as TestWith<T & U>);
       });
     },
     describe: (name: string, fn: BlockWith<U>) => {
-      test.describe(name, (test: TestWith<{}>) => {
-        fn({ ...test, ...get() } as TestWith<U>);
+      test.describe(name, (test: TestWith<T>) => {
+        fn({ ...test, ...get() } as TestWith<T & U>);
       });
     },
     it: (name: string, fn: BlockWith<U>) => {
-      test.it(name, (test: TestWith<{}>) => {
-        fn({ ...test, ...get() } as TestWith<U>);
+      test.it(name, (test: TestWith<T>) => {
+        fn({ ...test, ...get() } as TestWith<T & U>);
       });
     },
   });
