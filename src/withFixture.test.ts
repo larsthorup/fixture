@@ -23,9 +23,9 @@ test.describe("withFixture, typed", () => {
   let order: string[] = [];
 
   test.describe("block", () => {
-    type Db = { some: string };
-    const withDb = (test: Test<{}>, block: Block<{ db: Db | undefined }>) => {
-      let db: Db | undefined;
+    type Db = { some: string } | undefined;
+    const withDb = (test: Test<{}>, block: Block<{ db: Db }>) => {
+      let db: Db;
       const get = () => ({ db });
       test.beforeAll(() => {
         db = { some: "db" };
@@ -37,25 +37,22 @@ test.describe("withFixture, typed", () => {
       });
       block({
         ...test,
-        afterAll: (fn: (test: { db: Db | undefined }) => void) => {
+        afterAll: (fn: (test: { db: Db }) => void) => {
           test.afterAll(() => {
             fn({ ...test, ...get() });
           });
         },
-        beforeAll: (fn: (test: { db: Db | undefined }) => void) => {
+        beforeAll: (fn: (test: { db: Db }) => void) => {
           test.beforeAll(() => {
             fn({ ...test, ...get() });
           });
         },
-        describe: (
-          name: string,
-          fn: (test: { db: Db | undefined }) => void
-        ) => {
+        describe: (name: string, fn: (test: { db: Db }) => void) => {
           test.describe(name, (test: {}) => {
             fn({ ...test, ...get() });
           });
         },
-        it: (name: string, fn: (test: { db: Db | undefined }) => void) => {
+        it: (name: string, fn: (test: { db: Db }) => void) => {
           test.it(name, (test: {}) => {
             fn({ ...test, ...get() });
           });
@@ -64,7 +61,7 @@ test.describe("withFixture, typed", () => {
     };
     withDb(test, (test) => {
       test.describe("withServer", () => {
-        type Server = { db: Db | undefined };
+        type Server = { db: Db };
         let server: Server | undefined;
         test.beforeAll(({ db }) => {
           server = { db };
