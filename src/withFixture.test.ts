@@ -60,17 +60,19 @@ test.describe("withFixture, typed", () => {
   test.describe("block", () => {
     type Db = { some: string } | undefined;
     const withDb = (test: TestWith<{}>, block: BlockWith<{ db: Db }>) => {
-      let db: Db;
-      const get = () => ({ db });
-      test.beforeAll(() => {
-        db = { some: "db" };
-        order.push("setup db");
+      test.describe("useDb", () => {
+        let db: Db;
+        const get = () => ({ db });
+        test.beforeAll(() => {
+          db = { some: "db" };
+          order.push("setup db");
+        });
+        test.afterAll(() => {
+          db = undefined;
+          order.push("teardown db");
+        });
+        use(test, get, block);
       });
-      test.afterAll(() => {
-        db = undefined;
-        order.push("teardown db");
-      });
-      use(test, get, block);
     };
     withDb(test, (test) => {
       test.describe("withServer", () => {
