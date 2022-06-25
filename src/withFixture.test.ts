@@ -1,14 +1,10 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
-type AfterAll<T extends {}> = (fn: (test: T) => void) => void;
-type BeforeAll<T extends {}> = (fn: (test: T) => void) => void;
-type Describe<T extends {}> = (name: string, fn: (test: T) => void) => void;
-type It<T extends {}> = (name: string, fn: (test: T) => void) => void;
 type TestWith<T extends {}> = {
-  afterAll: AfterAll<T>;
-  beforeAll: BeforeAll<T>;
-  describe: Describe<T>;
-  it: It<T>;
+  afterAll: (fn: (test: T) => void) => void;
+  beforeAll: (fn: (test: T) => void) => void;
+  describe: (name: string, fn: (test: T) => void) => void;
+  it: (name: string, fn: (test: T) => void) => void;
 } & T;
 type BlockWith<T extends {}> = (test: TestWith<T>) => void;
 
