@@ -91,13 +91,21 @@ test.describe("withFixture, typed", () => {
         use(test, () => ({ server }), block);
       });
     };
-    withDb(test, (test) => {
-      withServer(test, (test) => {
-        test.it("should have setup", ({ db, server }) => {
-          expect(server).toEqual({ db: { some: "db" } });
-          expect(db).toEqual({ some: "db" });
-          order.push("test");
+    const withInfra = (
+      test: TestWith<{}>,
+      block: BlockWith<{ db: Db; server: Server }>
+    ) => {
+      withDb(test, (test) => {
+        withServer(test, (test) => {
+          use(test, () => ({}), block);
         });
+      });
+    };
+    withInfra(test, (test) => {
+      test.it("should have setup", ({ db, server }) => {
+        expect(server).toEqual({ db: { some: "db" } });
+        expect(db).toEqual({ some: "db" });
+        order.push("test");
       });
     });
   });
