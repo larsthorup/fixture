@@ -38,24 +38,24 @@ test.describe("withFixture, typed", () => {
       block({
         ...test,
         ...get(),
-        afterAll: (fn: (test: { db: Db }) => void) => {
+        afterAll: (fn: BlockWith<{ db: Db }>) => {
           test.afterAll(() => {
-            fn({ ...test, ...get() });
+            fn({ ...test, ...get() } as TestWith<{ db: Db }>);
           });
         },
-        beforeAll: (fn: (test: { db: Db }) => void) => {
+        beforeAll: (fn: BlockWith<{ db: Db }>) => {
           test.beforeAll(() => {
-            fn({ ...test, ...get() });
+            fn({ ...test, ...get() } as TestWith<{ db: Db }>);
           });
         },
-        describe: (name: string, fn: (test: { db: Db }) => void) => {
+        describe: (name: string, fn: BlockWith<{ db: Db }>) => {
           test.describe(name, (test: {}) => {
-            fn({ ...test, ...get() });
+            fn({ ...test, ...get() } as TestWith<{ db: Db }>);
           });
         },
-        it: (name: string, fn: (test: { db: Db }) => void) => {
+        it: (name: string, fn: BlockWith<{ db: Db }>) => {
           test.it(name, (test: {}) => {
-            fn({ ...test, ...get() });
+            fn({ ...test, ...get() } as TestWith<{ db: Db }>);
           });
         },
       });
