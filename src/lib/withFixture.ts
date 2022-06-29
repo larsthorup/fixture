@@ -14,7 +14,7 @@ export type TestWith<T extends {}> = {
   afterEach: Hook<T>;
   beforeAll: Hook<T>;
   beforeEach: Hook<T>;
-  describe: (name: string, fn: (test: TestWith<T>) => void) => void;
+  describe: (name: string, fn: () => void) => void;
   it: (name: string, fn: TestFn<T>, timeout?: number) => void;
 } & T;
 export type BlockWith<T extends {}> = (test: TestWith<T>) => void;
@@ -32,8 +32,8 @@ export const test: TestWith<{}> = {
   beforeEach: (fn: BlockWith<{}>, timeout: number | undefined = undefined) => {
     beforeEach(() => fn(test), timeout);
   },
-  describe: (name: string, fn: BlockWith<{}>) => {
-    describe(name, () => fn(test));
+  describe: (name: string, fn: () => void) => {
+    describe(name, () => fn());
   },
   it: (
     name: string,
@@ -88,11 +88,7 @@ export const use = <T extends {}, U extends {}>(
         timeout
       );
     },
-    describe: (name: string, fn: BlockWith<T & U>) => {
-      test.describe(name, (test: TestWith<T>) => {
-        fn({ ...test, ...get() } as TestWith<T & U>);
-      });
-    },
+    describe: test.describe,
     it: (
       name: string,
       fn: BlockWith<T & U>,
