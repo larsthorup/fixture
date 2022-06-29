@@ -9,5 +9,4 @@ npm test
 
 ## TODO
 
-- [ ] async
 - [ ] hook args (like timeout)

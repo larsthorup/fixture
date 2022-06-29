@@ -11,11 +11,13 @@ test.describe("withFixture, typed", () => {
     const withDb = (test: TestWith<{}>, block: BlockWith<{ db: Db }>) => {
       test.describe("useDb", () => {
         let db: Db;
-        test.beforeAll(() => {
+        test.beforeAll(async () => {
           db = { some: "db" };
           order.push("setup db");
+          await new Promise((resolve) => setTimeout(resolve, 500));
         });
-        test.afterAll(() => {
+        test.afterAll(async () => {
+          await new Promise((resolve) => setTimeout(resolve, 100));
           db = undefined;
           order.push("teardown db");
         });
@@ -29,11 +31,13 @@ test.describe("withFixture, typed", () => {
     ) => {
       test.describe("withServer", () => {
         let server: Server;
-        test.beforeEach(({ db }) => {
+        test.beforeEach(async ({ db }) => {
           server = { db };
           order.push("setup server");
+          await new Promise((resolve) => setTimeout(resolve, 300));
         });
-        test.afterEach(() => {
+        test.afterEach(async () => {
+          await new Promise((resolve) => setTimeout(resolve, 200));
           server = undefined;
           order.push("teardown server");
         });
