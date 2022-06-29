@@ -15,7 +15,7 @@ test.describe("withFixture, typed", () => {
           db = { some: "db" };
           order.push("setup db");
           await new Promise((resolve) => setTimeout(resolve, 500));
-        });
+        }, 1000);
         test.afterAll(async () => {
           await new Promise((resolve) => setTimeout(resolve, 100));
           db = undefined;

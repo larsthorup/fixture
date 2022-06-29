@@ -7,7 +7,7 @@ export const withServer = (
   test: TestWith<{ db: Db }>,
   block: BlockWith<{ db: Db; server: Server }>
 ) => {
-  test.describe("withServer", () => {
+  test.describe(withServer.name, () => {
     let server: Server;
     test.beforeAll(({ db }) => {
       server = { db };

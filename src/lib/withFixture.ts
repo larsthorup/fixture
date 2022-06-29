@@ -7,34 +7,40 @@ import {
   it,
 } from "vitest";
 
+export type TestFn<T extends {}> = (test: TestWith<T>) => void | Promise<void>;
+export type Hook<T extends {}> = (fn: TestFn<T>, timeout?: number) => void;
 export type TestWith<T extends {}> = {
-  afterAll: (fn: (test: TestWith<T>) => void | Promise<void>) => void;
-  afterEach: (fn: (test: TestWith<T>) => void | Promise<void>) => void;
-  beforeAll: (fn: (test: TestWith<T>) => void | Promise<void>) => void;
-  beforeEach: (fn: (test: TestWith<T>) => void | Promise<void>) => void;
+  afterAll: Hook<T>;
+  afterEach: Hook<T>;
+  beforeAll: Hook<T>;
+  beforeEach: Hook<T>;
   describe: (name: string, fn: (test: TestWith<T>) => void) => void;
-  it: (name: string, fn: (test: TestWith<T>) => void | Promise<void>) => void;
+  it: (name: string, fn: TestFn<T>, timeout?: number) => void;
 } & T;
 export type BlockWith<T extends {}> = (test: TestWith<T>) => void;
 
 export const test: TestWith<{}> = {
-  afterAll: (fn: BlockWith<{}>) => {
-    afterAll(() => fn(test));
+  afterAll: (fn: BlockWith<{}>, timeout: number | undefined = undefined) => {
+    afterAll(() => fn(test), timeout);
   },
-  afterEach: (fn: BlockWith<{}>) => {
-    afterEach(() => fn(test));
+  afterEach: (fn: BlockWith<{}>, timeout: number | undefined = undefined) => {
+    afterEach(() => fn(test), timeout);
   },
-  beforeAll: (fn: BlockWith<{}>) => {
-    beforeAll(() => fn(test));
+  beforeAll: (fn: BlockWith<{}>, timeout: number | undefined = undefined) => {
+    beforeAll(() => fn(test), timeout);
   },
-  beforeEach: (fn: BlockWith<{}>) => {
-    beforeEach(() => fn(test));
+  beforeEach: (fn: BlockWith<{}>, timeout: number | undefined = undefined) => {
+    beforeEach(() => fn(test), timeout);
   },
   describe: (name: string, fn: BlockWith<{}>) => {
     describe(name, () => fn(test));
   },
-  it: (name: string, fn: BlockWith<{}>) => {
-    it(name, () => fn(test));
+  it: (
+    name: string,
+    fn: BlockWith<{}>,
+    timeout: number | undefined = undefined
+  ) => {
+    it(name, () => fn(test), timeout);
   },
 };
 
@@ -46,24 +52,40 @@ export const use = <T extends {}, U extends {}>(
   block({
     ...test,
     ...get(),
-    afterAll: (fn: BlockWith<T & U>) => {
-      test.afterAll((test: TestWith<T>) =>
-        fn({ ...test, ...get() } as TestWith<T & U>)
+    afterAll: (
+      fn: BlockWith<T & U>,
+      timeout: number | undefined = undefined
+    ) => {
+      test.afterAll(
+        (test: TestWith<T>) => fn({ ...test, ...get() } as TestWith<T & U>),
+        timeout
       );
     },
-    afterEach: (fn: BlockWith<T & U>) => {
-      test.afterEach((test: TestWith<T>) =>
-        fn({ ...test, ...get() } as TestWith<T & U>)
+    afterEach: (
+      fn: BlockWith<T & U>,
+      timeout: number | undefined = undefined
+    ) => {
+      test.afterEach(
+        (test: TestWith<T>) => fn({ ...test, ...get() } as TestWith<T & U>),
+        timeout
       );
     },
-    beforeAll: (fn: BlockWith<T & U>) => {
-      test.beforeAll((test: TestWith<T>) =>
-        fn({ ...test, ...get() } as TestWith<T & U>)
+    beforeAll: (
+      fn: BlockWith<T & U>,
+      timeout: number | undefined = undefined
+    ) => {
+      test.beforeAll(
+        (test: TestWith<T>) => fn({ ...test, ...get() } as TestWith<T & U>),
+        timeout
       );
     },
-    beforeEach: (fn: BlockWith<T & U>) => {
-      test.beforeEach((test: TestWith<T>) =>
-        fn({ ...test, ...get() } as TestWith<T & U>)
+    beforeEach: (
+      fn: BlockWith<T & U>,
+      timeout: number | undefined = undefined
+    ) => {
+      test.beforeEach(
+        (test: TestWith<T>) => fn({ ...test, ...get() } as TestWith<T & U>),
+        timeout
       );
     },
     describe: (name: string, fn: BlockWith<T & U>) => {
@@ -71,9 +93,15 @@ export const use = <T extends {}, U extends {}>(
         fn({ ...test, ...get() } as TestWith<T & U>);
       });
     },
-    it: (name: string, fn: BlockWith<T & U>) => {
-      test.it(name, (test: TestWith<T>) =>
-        fn({ ...test, ...get() } as TestWith<T & U>)
+    it: (
+      name: string,
+      fn: BlockWith<T & U>,
+      timeout: number | undefined = undefined
+    ) => {
+      test.it(
+        name,
+        (test: TestWith<T>) => fn({ ...test, ...get() } as TestWith<T & U>),
+        timeout
       );
     },
   });
