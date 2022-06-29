@@ -1,8 +1,17 @@
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  it,
+} from "vitest";
 
 export type TestWith<T extends {}> = {
   afterAll: (fn: (test: TestWith<T>) => void) => void;
+  afterEach: (fn: (test: TestWith<T>) => void) => void;
   beforeAll: (fn: (test: TestWith<T>) => void) => void;
+  beforeEach: (fn: (test: TestWith<T>) => void) => void;
   describe: (name: string, fn: (test: TestWith<T>) => void) => void;
   it: (name: string, fn: (test: TestWith<T>) => void) => void;
 } & T;
@@ -12,8 +21,14 @@ export const test: TestWith<{}> = {
   afterAll: (fn: BlockWith<{}>) => {
     afterAll(() => fn(test));
   },
+  afterEach: (fn: BlockWith<{}>) => {
+    afterEach(() => fn(test));
+  },
   beforeAll: (fn: BlockWith<{}>) => {
     beforeAll(() => fn(test));
+  },
+  beforeEach: (fn: BlockWith<{}>) => {
+    beforeEach(() => fn(test));
   },
   describe: (name: string, fn: BlockWith<{}>) => {
     describe(name, () => fn(test));
@@ -36,8 +51,18 @@ export const use = <T extends {}, U extends {}>(
         fn({ ...test, ...get() } as TestWith<T & U>);
       });
     },
+    afterEach: (fn: BlockWith<T & U>) => {
+      test.afterEach((test: TestWith<T>) => {
+        fn({ ...test, ...get() } as TestWith<T & U>);
+      });
+    },
     beforeAll: (fn: BlockWith<T & U>) => {
       test.beforeAll((test: TestWith<T>) => {
+        fn({ ...test, ...get() } as TestWith<T & U>);
+      });
+    },
+    beforeEach: (fn: BlockWith<T & U>) => {
+      test.beforeEach((test: TestWith<T>) => {
         fn({ ...test, ...get() } as TestWith<T & U>);
       });
     },

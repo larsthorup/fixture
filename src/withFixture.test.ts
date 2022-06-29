@@ -29,11 +29,11 @@ test.describe("withFixture, typed", () => {
     ) => {
       test.describe("withServer", () => {
         let server: Server;
-        test.beforeAll(({ db }) => {
+        test.beforeEach(({ db }) => {
           server = { db };
           order.push("setup server");
         });
-        test.afterAll(() => {
+        test.afterEach(() => {
           server = undefined;
           order.push("teardown server");
         });
@@ -54,6 +54,7 @@ test.describe("withFixture, typed", () => {
       test.it("should have setup", ({ db, server }) => {
         expect(server).toEqual({ db: { some: "db" } });
         expect(db).toEqual({ some: "db" });
+        expect(db);
         order.push("test");
       });
     });
