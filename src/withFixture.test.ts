@@ -55,11 +55,14 @@ test.describe("withFixture, typed", () => {
       });
     };
     withInfra(test, (test) => {
-      test.it("should have setup", ({ db, server }) => {
-        expect(server).toEqual({ db: { some: "db" } });
-        expect(db).toEqual({ some: "db" });
-        expect(db);
-        order.push("test");
+      test.describe("inner describe", () => {
+        // TODO: why not `(test) =>` ???
+        test.it("should have setup", ({ db, server }) => {
+          expect(server).toEqual({ db: { some: "db" } });
+          expect(db).toEqual({ some: "db" });
+          expect(db);
+          order.push("test");
+        });
       });
     });
   });
