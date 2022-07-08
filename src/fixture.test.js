@@ -33,7 +33,7 @@ const testWithServer = testwithDb.extend({
     server = undefined;
   },
 });
-describe("fixture", () => {
+describe("fixture.js", () => {
   testWithServer("should have setup", ({ db, server }) => {
     expect(server).toEqual({ db: { some: "db" } });
     expect(db).toEqual({ some: "db" });
