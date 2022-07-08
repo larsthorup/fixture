@@ -1,4 +1,4 @@
-import { BlockWith, TestWith, use } from "../lib/withFixture";
+import { BlockWith, TestWith, use } from "../../lib/withFixture";
 import { Db, withDb } from "./withDb";
 import { Server, withServer } from "./withServer";
 

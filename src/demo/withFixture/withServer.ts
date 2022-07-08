@@ -1,4 +1,4 @@
-import { BlockWith, TestWith, use } from "../lib/withFixture";
+import { BlockWith, TestWith, use } from "../../lib/withFixture";
 import { Db } from "./withDb";
 
 export type Server = { db: Db } | undefined;

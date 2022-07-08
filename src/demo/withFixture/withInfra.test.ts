@@ -1,5 +1,5 @@
 import { expect } from "vitest";
-import { test } from "../lib/withFixture";
+import { test } from "../../lib/withFixture";
 import { withInfra } from "./withInfra";
 
 withInfra(test, (test) => {
