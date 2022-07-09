@@ -7,7 +7,7 @@ let order: string[] = [];
 
 type Db = { name: string };
 const testWithDb = test.extend<{}, { name: string; db: Db }>({
-  name: ["db", { scope: "worker" }],
+  name: ["test", { scope: "worker" }],
   db: [
     async ({ name }, use) => {
       order.push("setup db");
@@ -34,6 +34,7 @@ const testWithServer = testWithDb.extend<{ server: Server }>({
   },
 });
 
+testWithServer.use({ name: "db" });
 test.describe("fixture", () => {
   test.describe("scope to postpone afterAll until db teardown", () => {
     testWithServer("should have setup db and server", ({ db, server }) => {

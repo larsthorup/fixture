@@ -18,6 +18,7 @@ export interface TestType<
 > extends TestFunction<TestArgs & WorkerArgs> {
   afterAll: HookFunction;
   describe: SuiteFunction;
+  use(fixtures: Fixtures<{}, {}, TestArgs, WorkerArgs>): void;
   extend<T extends KeyValue, W extends KeyValue = {}>(
     fixtures: Fixtures<T, W, TestArgs, WorkerArgs>
   ): TestType<TestArgs & T, WorkerArgs & W>;
@@ -55,15 +56,17 @@ type Fixtures<
 };
 type FixtureScope = "test" | "worker";
 type FixtureOptions = { scope: FixtureScope };
+type FixtureValue<TestArgs, WorkerArgs> =
+  | TestFixtureValue<any, TestArgs>
+  | [TestFixtureValue<any, TestArgs>, FixtureOptions]
+  | [WorkerFixtureValue<any, WorkerArgs>, FixtureOptions];
+
 type FixtureList<TestArgs, WorkerArgs> = [
   key: string,
-  value:
-    | TestFixtureValue<any, TestArgs>
-    | [TestFixtureValue<any, TestArgs>, FixtureOptions]
-    | [WorkerFixtureValue<any, WorkerArgs>, FixtureOptions]
+  value: FixtureValue<TestArgs, WorkerArgs>
 ][];
 
-let allFixtures: TODO = {};
+const allTests: TestTypeImpl<KeyValue, KeyValue>[] = [];
 
 let workerHookSingleton: typeof workerHook;
 const workerHook = async (): Promise<() => Promise<void>> => {
@@ -96,6 +99,10 @@ const workerHook = async (): Promise<() => Promise<void>> => {
       }
     }
   };
+  const allFixtures = {};
+  for (const test of allTests) {
+    Object.assign(allFixtures, test.fixtures);
+  }
   const fixtureList = Object.entries(allFixtures) as FixtureList<
     KeyValue,
     KeyValue
@@ -115,7 +122,7 @@ class TestTypeImpl<TestArgs extends KeyValue, WorkerArgs extends KeyValue> {
   readonly test: TestType<TestArgs, WorkerArgs>;
   constructor(fixtures: Fixtures<{}, {}, TestArgs, WorkerArgs>) {
     this.fixtures = fixtures;
-    allFixtures = { ...allFixtures, ...fixtures };
+    allTests.push(this);
     const test = (name: string, fn: (args: TestArgs & WorkerArgs) => void) => {
       if (!workerHookSingleton) {
         // Note: ensure that we only generate a single beforeAll for the worker
@@ -172,6 +179,7 @@ class TestTypeImpl<TestArgs extends KeyValue, WorkerArgs extends KeyValue> {
         W & WorkerArgs
       >
     ): TestType<TestArgs & T, WorkerArgs & W> => {
+      // TODO: do not copy parent fixture, but link to parent to support parent.use() changing the fixture
       const fixturesExtended = { ...this.fixtures, ...fixtures } as Fixtures<
         T & TestArgs,
         W & WorkerArgs,
@@ -179,6 +187,23 @@ class TestTypeImpl<TestArgs extends KeyValue, WorkerArgs extends KeyValue> {
         W & WorkerArgs
       >;
       return new TestTypeImpl(fixturesExtended).test;
+    };
+    test.use = (fixtures: Fixtures<{}, {}, TestArgs, WorkerArgs>) => {
+      for (const [key, fixture] of Object.entries(fixtures)) {
+        const fixtureBase = this.fixtures[key] as FixtureValue<
+          TestArgs,
+          WorkerArgs
+        >;
+        const isWorker = Array.isArray(fixtureBase)
+          ? (fixtureBase[1] as FixtureOptions).scope === "worker"
+          : false;
+        Object.assign(this.fixtures, {
+          [key]:
+            isWorker && !Array.isArray(fixture)
+              ? [fixture, { scope: "worker" }]
+              : fixture,
+        });
+      }
     };
     this.test = test as TestType<TestArgs, WorkerArgs>;
   }
