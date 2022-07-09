@@ -1,6 +1,6 @@
 // Note: inspired by Playwright
 
-import { beforeEach, expect } from "vitest";
+import { afterAll, beforeEach, describe, expect } from "vitest";
 import { test } from "./lib/fixture";
 
 let order: string[] = [];
@@ -36,14 +36,14 @@ const testWithServer = testWithDb.extend<{ port: number; server: Server }>({
 });
 
 testWithServer.use({ name: "db" });
-test.describe("fixture", () => {
-  test.describe("scope to postpone afterAll until db teardown", () => {
+describe("fixture", () => {
+  describe("scope to postpone afterAll until db teardown", () => {
     testWithServer("should have setup db and server", ({ db, server }) => {
       order.push("test");
       expect(db).toEqual({ name: "db" });
       expect(server).toEqual({ db: { name: "db" }, port: 8000 });
     });
-    testWithServer.describe("scope for explicit port", () => {
+    describe("scope for explicit port", () => {
       beforeEach(() => {
         testWithServer.use({ port: 8001 });
       });
@@ -57,7 +57,7 @@ test.describe("fixture", () => {
       );
     });
   });
-  test.afterAll(async () => {
+  afterAll(async () => {
     expect(order).toEqual([
       "setup db",
       "setup server",

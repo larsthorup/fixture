@@ -1,23 +1,13 @@
-import { afterAll, beforeAll, describe, it } from "vitest";
-
-type TODO = any;
+import { beforeAll, it } from "vitest";
 
 type KeyValue = { [key: string]: any };
 interface TestFunction<TestArgs> {
   (name: string, fn: (args: TestArgs) => Promise<void> | void): void;
 }
-interface HookFunction {
-  (fn: () => void): void;
-}
-interface SuiteFunction {
-  (name: string, fn: () => void): void;
-}
 export interface TestType<
   TestArgs extends KeyValue,
   WorkerArgs extends KeyValue
 > extends TestFunction<TestArgs & WorkerArgs> {
-  afterAll: HookFunction;
-  describe: SuiteFunction;
   use(fixtures: Fixtures<{}, {}, TestArgs, WorkerArgs>): void;
   extend<T extends KeyValue, W extends KeyValue = {}>(
     fixtures: Fixtures<T, W, TestArgs, WorkerArgs>
@@ -169,8 +159,6 @@ class TestTypeImpl<TestArgs extends KeyValue, WorkerArgs extends KeyValue> {
         return reduceFixtures(fixtureList, args);
       });
     };
-    test.afterAll = afterAll;
-    test.describe = (name: string, fn: () => void) => describe(name, fn);
     test.extend = <T, W>(
       fixtures: Fixtures<
         T & TestArgs,
