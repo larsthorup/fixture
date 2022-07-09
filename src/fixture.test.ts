@@ -1,6 +1,6 @@
 // Note: inspired by Playwright
 
-import { expect } from "vitest";
+import { beforeEach, expect } from "vitest";
 import { test } from "./lib/fixture";
 
 let order: string[] = [];
@@ -22,11 +22,12 @@ const testWithDb = test.extend<{}, { name: string; db: Db }>({
   ],
 });
 
-type Server = { db: Db };
-const testWithServer = testWithDb.extend<{ server: Server }>({
-  server: async ({ db }, use) => {
+type Server = { db: Db; port: number };
+const testWithServer = testWithDb.extend<{ port: number; server: Server }>({
+  port: 8000,
+  server: async ({ db, port }, use) => {
     order.push("setup server");
-    let server: Server | undefined = { db };
+    let server: Server | undefined = { db, port };
     await use(server, async () => {
       order.push("teardown server");
       server = undefined;
@@ -40,16 +41,21 @@ test.describe("fixture", () => {
     testWithServer("should have setup db and server", ({ db, server }) => {
       order.push("test");
       expect(db).toEqual({ name: "db" });
-      expect(server).toEqual({ db: { name: "db" } });
+      expect(server).toEqual({ db: { name: "db" }, port: 8000 });
     });
-    testWithServer(
-      "should have setup db once and server twice",
-      ({ db, server }) => {
-        order.push("test");
-        expect(db).toEqual({ name: "db" });
-        expect(server).toEqual({ db: { name: "db" } });
-      }
-    );
+    testWithServer.describe("scope for explicit port", () => {
+      beforeEach(() => {
+        testWithServer.use({ port: 8001 });
+      });
+      testWithServer(
+        "should have setup db once and server twice",
+        ({ db, server }) => {
+          order.push("test");
+          expect(db).toEqual({ name: "db" });
+          expect(server).toEqual({ db: { name: "db" }, port: 8001 });
+        }
+      );
+    });
   });
   test.afterAll(async () => {
     expect(order).toEqual([
