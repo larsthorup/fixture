@@ -12,7 +12,8 @@ interface HookFunction {
 interface SuiteFunction {
   (name: string, fn: () => void): void;
 }
-interface TestType<TestArgs extends KeyValue> extends TestFunction<TestArgs> {
+export interface TestType<TestArgs extends KeyValue>
+  extends TestFunction<TestArgs> {
   afterAll: HookFunction;
   describe: SuiteFunction;
   extend<T extends KeyValue>(
