@@ -1,7 +1,7 @@
 import { test as base } from "../../lib/fixture";
 
 export type Db = { some: "db" };
-export const test = base.extend<{ db: Db }>({
+export const test = base.extend<{}, { db: Db }>({
   db: [
     async ({}, use) => {
       let db: Db | undefined = { some: "db" };

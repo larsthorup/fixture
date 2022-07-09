@@ -6,7 +6,7 @@ import { test } from "./lib/fixture";
 let order: string[] = [];
 
 type Db = { some: "db" };
-const testWithDb = test.extend<{ db: Db }>({
+const testWithDb = test.extend<{}, { db: Db }>({
   db: [
     async ({}, use) => {
       order.push("setup db");

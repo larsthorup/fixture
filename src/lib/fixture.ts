@@ -12,32 +12,55 @@ interface HookFunction {
 interface SuiteFunction {
   (name: string, fn: () => void): void;
 }
-export interface TestType<TestArgs extends KeyValue>
-  extends TestFunction<TestArgs> {
+export interface TestType<
+  TestArgs extends KeyValue,
+  WorkerArgs extends KeyValue
+> extends TestFunction<TestArgs & WorkerArgs> {
   afterAll: HookFunction;
   describe: SuiteFunction;
-  extend<T extends KeyValue>(
-    fixtures: Fixtures<T, TestArgs>
-  ): TestType<TestArgs & T>;
+  extend<T extends KeyValue, W extends KeyValue = {}>(
+    fixtures: Fixtures<T, W, TestArgs, WorkerArgs>
+  ): TestType<TestArgs & T, WorkerArgs & W>;
 }
-type TestFixtureValue<R, Args extends KeyValue> = (
+type TestFixture<R, Args extends KeyValue> = (
   args: Args,
   use: (r: R, teardown?: () => Promise<void>) => Promise<void> | void
 ) => any;
-type Fixtures<T extends KeyValue, PT extends KeyValue> = {
-  [K in keyof PT]?: TestFixtureValue<PT[K], T & PT>;
+export type WorkerFixture<R, Args extends KeyValue> = (
+  args: Args,
+  use: (r: R, teardown?: () => Promise<void>) => Promise<void>
+) => any;
+type TestFixtureValue<R, Args extends KeyValue> =
+  // | Exclude<R, Function>
+  TestFixture<R, Args>;
+type WorkerFixtureValue<R, Args extends KeyValue> =
+  // | Exclude<R, Function>
+  WorkerFixture<R, Args>;
+
+type Fixtures<
+  T extends KeyValue,
+  W extends KeyValue,
+  PT extends KeyValue,
+  PW extends KeyValue
+> = {
+  [K in keyof PT]?: TestFixtureValue<PT[K], T & PT & PW>;
 } & {
   [K in keyof T]?:
-    | TestFixtureValue<T[K], T & PT>
-    | [TestFixtureValue<T[K], T & PT>, FixtureOptions];
+    | TestFixtureValue<T[K], T & PT & PW>
+    | [TestFixtureValue<T[K], T & PT & PW>, { scope?: "test" }];
+} & {
+  [K in keyof PW]?: WorkerFixtureValue<PW[K], W & PW>;
+} & {
+  [K in keyof W]?: [WorkerFixtureValue<W[K], W & PW>, { scope: "worker" }];
 };
 type FixtureScope = "test" | "worker";
 type FixtureOptions = { scope: FixtureScope };
-type FixtureList<TestArgs> = [
+type FixtureList<TestArgs, WorkerArgs> = [
   key: string,
   value:
     | TestFixtureValue<any, TestArgs>
     | [TestFixtureValue<any, TestArgs>, FixtureOptions]
+    | [WorkerFixtureValue<any, WorkerArgs>, FixtureOptions]
 ][];
 
 let allFixtures: TODO = {};
@@ -46,7 +69,7 @@ let workerHookSingleton: typeof workerHook;
 const workerHook = async (): Promise<() => Promise<void>> => {
   const teardownList: (() => Promise<void>)[] = [];
   const reduceFixtures = async (
-    fixtureList: FixtureList<KeyValue>,
+    fixtureList: FixtureList<KeyValue, KeyValue>,
     args: KeyValue
   ): Promise<void> => {
     if (fixtureList.length > 0) {
@@ -68,7 +91,10 @@ const workerHook = async (): Promise<() => Promise<void>> => {
       }
     }
   };
-  const fixtureList = Object.entries(allFixtures) as FixtureList<KeyValue>;
+  const fixtureList = Object.entries(allFixtures) as FixtureList<
+    KeyValue,
+    KeyValue
+  >;
   const args = {} as KeyValue;
   await reduceFixtures(fixtureList, args);
   return async () => {
@@ -79,13 +105,13 @@ const workerHook = async (): Promise<() => Promise<void>> => {
 };
 
 const fixtureValueCache: { [key: string]: any } = {};
-class TestTypeImpl<TestArgs extends KeyValue> {
-  readonly fixtures: Fixtures<TestArgs, TestArgs>;
-  readonly test: TestType<TestArgs>;
-  constructor(fixtures: Fixtures<{}, TestArgs>) {
+class TestTypeImpl<TestArgs extends KeyValue, WorkerArgs extends KeyValue> {
+  readonly fixtures: Fixtures<TestArgs, WorkerArgs, TestArgs, WorkerArgs>;
+  readonly test: TestType<TestArgs, WorkerArgs>;
+  constructor(fixtures: Fixtures<{}, {}, TestArgs, WorkerArgs>) {
     this.fixtures = fixtures;
     allFixtures = { ...allFixtures, ...fixtures };
-    const test = (name: string, fn: (args: TestArgs) => void) => {
+    const test = (name: string, fn: (args: TestArgs & WorkerArgs) => void) => {
       if (!workerHookSingleton) {
         // Note: ensure that we only generate a single beforeAll for the worker
         workerHookSingleton = workerHook;
@@ -93,8 +119,8 @@ class TestTypeImpl<TestArgs extends KeyValue> {
       }
       it(name, async () => {
         const reduceFixtures = async (
-          fixtureList: FixtureList<TestArgs>,
-          args: TestArgs
+          fixtureList: FixtureList<TestArgs, WorkerArgs>,
+          args: TestArgs & WorkerArgs
         ): Promise<void> => {
           if (fixtureList.length === 0) {
             return fn(args);
@@ -118,28 +144,36 @@ class TestTypeImpl<TestArgs extends KeyValue> {
             }
           }
         };
-        const fixtureList = Object.entries(
-          this.fixtures
-        ) as FixtureList<TestArgs>;
-        const args = {} as TestArgs;
+        const fixtureList = Object.entries(this.fixtures) as FixtureList<
+          TestArgs,
+          WorkerArgs
+        >;
+        const args = {} as TestArgs & WorkerArgs;
         return reduceFixtures(fixtureList, args);
       });
     };
     test.afterAll = afterAll;
     test.describe = (name: string, fn: () => void) => describe(name, fn);
-    test.extend = <T>(
-      fixtures: Fixtures<T, TestArgs>
-    ): TestType<TestArgs & T> => {
+    test.extend = <T, W>(
+      fixtures: Fixtures<
+        T & TestArgs,
+        W & WorkerArgs,
+        T & TestArgs,
+        W & WorkerArgs
+      >
+    ): TestType<TestArgs & T, WorkerArgs & W> => {
       const fixturesExtended = { ...this.fixtures, ...fixtures } as Fixtures<
         T & TestArgs,
-        T & TestArgs
+        W & WorkerArgs,
+        T & TestArgs,
+        W & WorkerArgs
       >;
       return new TestTypeImpl(fixturesExtended).test;
     };
-    this.test = test;
+    this.test = test as TestType<TestArgs, WorkerArgs>;
   }
 }
 
 const rootTestType = new TestTypeImpl({});
-const baseTest: TestType<{}> = rootTestType.test;
+const baseTest: TestType<{}, {}> = rootTestType.test;
 export const test = baseTest;
