@@ -31,11 +31,11 @@ export type WorkerFixture<R, Args extends KeyValue> = (
   use: (r: R, teardown?: () => Promise<void>) => Promise<void>
 ) => any;
 type TestFixtureValue<R, Args extends KeyValue> =
-  // | Exclude<R, Function>
-  TestFixture<R, Args>;
+  | Exclude<R, Function>
+  | TestFixture<R, Args>;
 type WorkerFixtureValue<R, Args extends KeyValue> =
-  // | Exclude<R, Function>
-  WorkerFixture<R, Args>;
+  | Exclude<R, Function>
+  | WorkerFixture<R, Args>;
 
 type Fixtures<
   T extends KeyValue,
@@ -74,15 +74,20 @@ const workerHook = async (): Promise<() => Promise<void>> => {
   ): Promise<void> => {
     if (fixtureList.length > 0) {
       const [[key, fixture], ...fixtureListRest] = fixtureList;
-      const [fixtureValue, { scope }] = Array.isArray(fixture)
+      const [fixtureValueOrFunction, { scope }] = Array.isArray(fixture)
         ? fixture
         : [fixture, { scope: "test" as FixtureScope }];
+      const fixtureFunction: TestFixture<any, KeyValue> =
+        typeof fixtureValueOrFunction === "function"
+          ? fixtureValueOrFunction
+          : (_: KeyValue, use: (value: any) => Promise<void>) =>
+              use(fixtureValueOrFunction);
       switch (scope) {
         case "test":
           fixtureValueCache[key] = undefined;
           return;
         case "worker":
-          return fixtureValue(args, async (value, teardown) => {
+          return fixtureFunction(args, async (value, teardown) => {
             fixtureValueCache[key] = value;
             const argsAccumulated = { ...args, [key]: value };
             if (teardown) teardownList.push(teardown);
@@ -126,12 +131,17 @@ class TestTypeImpl<TestArgs extends KeyValue, WorkerArgs extends KeyValue> {
             return fn(args);
           } else {
             const [[key, fixture], ...fixtureListRest] = fixtureList;
-            const [fixtureValue, { scope }] = Array.isArray(fixture)
+            const [fixtureValueOrFunction, { scope }] = Array.isArray(fixture)
               ? fixture
               : [fixture, { scope: "test" as FixtureScope }];
+            const fixtureFunction: TestFixture<any, KeyValue> =
+              typeof fixtureValueOrFunction === "function"
+                ? fixtureValueOrFunction
+                : (_: KeyValue, use: (value: any) => Promise<void>) =>
+                    use(fixtureValueOrFunction);
             switch (scope) {
               case "test":
-                return fixtureValue(args, async (value, teardown) => {
+                return fixtureFunction(args, async (value, teardown) => {
                   const argsAccumulated = { ...args, [key]: value };
                   await reduceFixtures(fixtureListRest, argsAccumulated);
                   if (teardown) await teardown();

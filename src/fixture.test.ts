@@ -5,12 +5,13 @@ import { test } from "./lib/fixture";
 
 let order: string[] = [];
 
-type Db = { some: "db" };
-const testWithDb = test.extend<{}, { db: Db }>({
+type Db = { name: string };
+const testWithDb = test.extend<{}, { name: string; db: Db }>({
+  name: ["db", { scope: "worker" }],
   db: [
-    async ({}, use) => {
+    async ({ name }, use) => {
       order.push("setup db");
-      let db: Db | undefined = { some: "db" };
+      let db: Db | undefined = { name };
       await use(db, async () => {
         // console.log("teardown db");
         order.push("teardown db");
@@ -37,15 +38,15 @@ test.describe("fixture", () => {
   test.describe("scope to postpone afterAll until db teardown", () => {
     testWithServer("should have setup db and server", ({ db, server }) => {
       order.push("test");
-      expect(db).toEqual({ some: "db" });
-      expect(server).toEqual({ db: { some: "db" } });
+      expect(db).toEqual({ name: "db" });
+      expect(server).toEqual({ db: { name: "db" } });
     });
     testWithServer(
       "should have setup db once and server twice",
       ({ db, server }) => {
         order.push("test");
-        expect(db).toEqual({ some: "db" });
-        expect(server).toEqual({ db: { some: "db" } });
+        expect(db).toEqual({ name: "db" });
+        expect(server).toEqual({ db: { name: "db" } });
       }
     );
   });
