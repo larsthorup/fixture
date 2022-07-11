@@ -1,7 +1,7 @@
 // Note: inspired by Playwright
 
 import { afterAll, beforeEach, describe, expect } from "vitest";
-import { test } from "./lib/fixture";
+import { test, TestFixtureValue } from "./lib/fixture";
 
 let order: string[] = [];
 
@@ -68,5 +68,26 @@ describe("fixture", () => {
       "teardown server",
       "teardown db",
     ]);
+  });
+});
+
+// mix-in fixtures
+const base = test;
+type Queue = { fifo: string[] };
+const queue: TestFixtureValue<Queue, { queue: Queue }> = async ({}, use) => {
+  const queue = { fifo: [] };
+  await use(queue);
+};
+type Stack = { filo: string[] };
+const stack: TestFixtureValue<Stack, { stack: Stack }> = async ({}, use) => {
+  const stack = { filo: [] };
+  await use(stack);
+};
+
+describe("mix-in fixture", () => {
+  const test = base.extend<{ stack: Stack; queue: Queue }>({ stack, queue });
+  test("test with queue and stack", ({ queue, stack }) => {
+    expect(queue).toEqual({ fifo: [] });
+    expect(stack).toEqual({ filo: [] });
   });
 });

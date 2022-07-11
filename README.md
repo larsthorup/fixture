@@ -10,14 +10,17 @@ npm test
 - how to pass input to test scoped fixtures: use a generator function
 - how to read other output (like databaseName): return an array or object
 - how to not produce output (like useTestKnex): return undefined: void
+- how to mix and match independent fixtures adhoc
 
 ## publish
 
-- publish on npm: vitest-fixture
-- with js, esm, tests, types, eslint and prettier
-- with docs
+- with eslint, types (also published, badge on npm), tests, coverage
 - PR for extract-pg-schema
-- announce on discord:vitest
+- badges: npm, build, coverage
+- with docs
+- announce
+  - discord:vitest
+  - twitter
 
 ## TODO
 

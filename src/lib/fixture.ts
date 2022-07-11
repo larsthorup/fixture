@@ -21,7 +21,7 @@ export type WorkerFixture<R, Args extends KeyValue> = (
   args: Args,
   use: (r: R, teardown?: () => Promise<void>) => Promise<void>
 ) => any;
-type TestFixtureValue<R, Args extends KeyValue> =
+export type TestFixtureValue<R, Args extends KeyValue> =
   | Exclude<R, Function>
   | TestFixture<R, Args>;
 type WorkerFixtureValue<R, Args extends KeyValue> =
